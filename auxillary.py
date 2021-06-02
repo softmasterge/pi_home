@@ -15,6 +15,6 @@ from defines import VERSION_1_INPUTS
          if( self.output_state[i] == 1)
              result = result | (1 << i)
 
-    return result;
+    return result
      
      

@@ -8,13 +8,13 @@ Created on Thu May 27 14:25:05 2021
 from defines import *
 import subprocess
 from subprocess import check_output
-from auxillary import array_to_byte
+
 
 
 
 class Device:
     
-    def reset_states(self):
+    def reset_states(self, inputs, outputs):
         self.input_state  = [0xFF]*inputs
         self.output_state = [0xFF]*outputs
         self.state = STATE_UNKNOWN;
@@ -23,7 +23,7 @@ class Device:
         self.device_id = id
         self.num_inputs = inputs
         self.num_outputs =outputs
-        self.reset_states(output_state)
+        self.reset_states(inputs, outputs)
     
    
     def tick(self):
