@@ -3,7 +3,7 @@
 import socket
 import time
 import logging
-
+import sys
 import subprocess
 from subprocess import check_output
 from defines import  CMD_GET,CMD_SET,SOCKET_TIMEOUT,HOST,PORT, GREETING_MESSAGE
@@ -44,6 +44,7 @@ def start_server():
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 try:
                     s.settimeout(SOCKET_TIMEOUT)
+                    logging.info(f"Connecting to {HOST}:{PORT}")
                     s.connect((HOST, PORT))
                     s.sendall(bytes(GREETING_MESSAGE, 'utf-8'))
                     s.settimeout(SOCKET_TIMEOUT)
@@ -66,7 +67,6 @@ def start_server():
                                     print(response)
                                     s.sendall(bytes(response, 'utf-8'));
                                     recv_buffer.clear()
-
                                 elif tokens[0] == CMD_SET:
                                     if len(tokens) > 1:
                                         logging.info(f"CMD_SET {tokens[1]}")
@@ -90,12 +90,31 @@ def start_server():
                                     response = ' '.join([RESPONCE_OK, response, response2])
                                     s.sendall(bytes(response, 'utf-8'));
                                     recv_buffer.clear()
+                                elif tokens[0] == CMD_PULSE:
+
+                                    if len(tokens) > 1:
+
+                                        response = check_output( CMD_GET_INPUT, shell=True).decode().rstrip()
+                                        state = int(response, 16);
+                                        index = int(tokens[1])
+                                        output = str((~(1 << index))&0xFF);
+                                        logging.info(f"PULSE {output}")
+                                        switch_cmd = f"{CMD_SET_OUTPUT} {output}"
+                                        logging.info(f"Executing> {switch_cmd}")
+                                        response = check_output(switch_cmd, shell=True).decode()
+                                        time.sleep(PULSE_DELAY)
+                                        response = check_output(CMD_SWITCH_OFF, shell=True).decode()
+
+                                    else:
+                                        logging.error("CMD_PULSE arguments not found")
+
                                 else:
                                     logging.warning(f"unknown command {tokens[0]}")
                                     recv_buffer.clear()
                             else:
                                 print ("chunk received\n")
                 except:
+                    print("Unexpected error:", sys.exc_info()[0])
                     if(lan_retries >= MAX_LAN_RETRIES):
                         break;
                     recv_buffer.clear()
